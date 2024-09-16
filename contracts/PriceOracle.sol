@@ -67,4 +67,28 @@ contract PriceOracle {
 
         price1 = decimals0 >= decimals1 ? price1 * (10 ** (decimals0 - decimals1)) : price1 * (10 ** (decimals1 - decimals0));
     }
+
+    function getQuote(
+        address tokenIn,
+        address tokenOut,
+        address poolAddress,
+        uint256 amountIn
+    )
+        public
+        view
+        returns (uint256 amountOut)
+    {
+        require(poolAddress != address(0), "Pool does not exist");
+
+        IUniswapV3Pool pool = IUniswapV3Pool(poolAddress);
+
+        (uint160 sqrtPriceX96,,,,,,) = pool.slot0();
+
+        uint256 priceX96 = uint256(sqrtPriceX96) * uint256(sqrtPriceX96) / (1 << 96);
+        if (tokenIn < tokenOut) {
+            amountOut = (amountIn * priceX96) / (1 << 96);
+        } else {
+            amountOut = (amountIn * (1 << 96)) / priceX96;
+        }
+    }
 }
